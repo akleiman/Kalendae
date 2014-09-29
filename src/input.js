@@ -25,12 +25,14 @@ Kalendae.Input = function (targetElement, options) {
 	Kalendae.call(self, opts);
 
 	//create the close button
-	if (opts.closeButton) {
-		$closeButton = util.make('a', {'class':classes.closeButton}, self.container);
-		util.addEvent($closeButton, 'click', function () {
-			$input.blur();
-		});
-	}
+    if (opts.closeButton) {
+    $closeButton = util.make('a', {'class':classes.closeButton}, self.container);
+    util.addEvent($closeButton, 'click', function () {
+      if(util.isIE8())
+        self.hide();
+      $input.blur();
+    });
+  }
 
 	if (overwriteInput) $input.value = self.getSelected();
 
@@ -46,11 +48,14 @@ Kalendae.Input = function (targetElement, options) {
 
 	this._events.documentMousedown = util.addEvent(window.document, 'mousedown', function (event, target) {
 		noclose = false;
+        if(util.isIE8())
+          self.hide();
 	});
 
 	this._events.inputFocus = util.addEvent($input, 'focus', function () {
 		changing = true; // prevent setSelected from altering the input contents.
-		self.setSelected(this.value);
+        if(!util.isIE8())
+		    self.setSelected(this.value);
 		changing = false;
 		self.show();
 	});
