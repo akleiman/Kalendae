@@ -27,7 +27,7 @@ var Kalendae = function (targetElement, options) {
 		opts = self.settings = util.merge(self.defaults, {attachTo:targetElement}, options || {}),
 		$container = self.container = util.make('div', {'class':classes.container}),
 		calendars = self.calendars = [],
-		startDay = moment().day(opts.weekStart),
+		startDay = moment.utc().day(opts.weekStart),
 		vsd,
 		columnHeaders = [],
 		$cal,
@@ -62,11 +62,11 @@ var Kalendae = function (targetElement, options) {
 
 	//set the view month
 	if (!!opts.viewStartDate) {
-		vsd = moment(opts.viewStartDate, opts.format);
+		vsd = moment.utc(opts.viewStartDate, opts.format);
 	} else if (self._sel.length > 0) {
-		vsd = moment(self._sel[0]);
+		vsd = moment.utc(self._sel[0]);
 	} else {
-		vsd = moment();
+		vsd = moment.utc();
 	}
 	self.viewStartDate = vsd.date(1);
 
@@ -79,8 +79,8 @@ var Kalendae = function (targetElement, options) {
 	})[this.settings.direction];
 
 
-	if (viewDelta && moment().month()==moment(self.viewStartDate).month()){
-		self.viewStartDate = moment(self.viewStartDate).subtract({M:viewDelta}).date(1);
+	if (viewDelta && moment.utc().month()==moment.utc(self.viewStartDate).month()){
+		self.viewStartDate = moment.utc(self.viewStartDate).subtract({M:viewDelta}).date(1);
 	}
 
 
@@ -89,7 +89,7 @@ var Kalendae = function (targetElement, options) {
 	} else if (!!opts.blackout) {
 		var bdates = parseDates(opts.blackout, opts.parseSplitDelimiter, opts.format);
 		self.blackout = function (input) {
-			input = moment(input).startOf('day').yearDay();
+			input = moment.utc(input).startOf('day').yearDay();
 			if (input < 1 || !self._sel) return false;
 			var i = bdates.length;
 			while (i--) if (bdates[i].startOf('day').yearDay() === input) return true;
@@ -197,7 +197,7 @@ var Kalendae = function (targetElement, options) {
 
 		} else if ( (util.hasClassName(target.parentNode, classes.days) || util.hasClassName(target.parentNode, classes.week)) && util.hasClassName(target, classes.dayActive) && (clickedDate = target.getAttribute('data-date'))) {
 		//DAY CLICK
-			clickedDate = moment(clickedDate, opts.dayAttributeFormat).hours(12);
+			clickedDate = moment.utc(clickedDate, opts.dayAttributeFormat).hours(12);
 			if (self.publish('date-clicked', self, [clickedDate]) !== false) {
 
 				switch (opts.mode) {
@@ -222,7 +222,7 @@ var Kalendae = function (targetElement, options) {
 
 		} else if ( util.hasClassName(target.parentNode, classes.week) && (clickedDate = target.getAttribute('data-date') ) ) {
 		//INACTIVE WEEK CLICK
-			clickedDate = moment(clickedDate, opts.dayAttributeFormat).hours(12);
+			clickedDate = moment.utc(clickedDate, opts.dayAttributeFormat).hours(12);
 			if (self.publish('date-clicked', self, [clickedDate]) !== false) {
 				if (opts.mode == 'week') {
 					self.weekSelected(clickedDate);
@@ -302,11 +302,11 @@ Kalendae.prototype = {
 	disableNextYear: false,
 
 	directions: {
-		'past'          :function (date) {return moment(date).startOf('day').yearDay() >= today.yearDay();},
-		'today-past'    :function (date) {return moment(date).startOf('day').yearDay() > today.yearDay();},
+		'past'          :function (date) {return moment.utc(date).startOf('day').yearDay() >= today.yearDay();},
+		'today-past'    :function (date) {return moment.utc(date).startOf('day').yearDay() > today.yearDay();},
 		'any'           :function (date) {return false;},
-		'today-future'  :function (date) {return moment(date).startOf('day').yearDay() < today.yearDay();},
-		'future'        :function (date) {return moment(date).startOf('day').yearDay() <= today.yearDay();}
+		'today-future'  :function (date) {return moment.utc(date).startOf('day').yearDay() < today.yearDay();},
+		'future'        :function (date) {return moment.utc(date).startOf('day').yearDay() <= today.yearDay();}
 	},
 
 	getSelectedAsDates : function () {
@@ -331,7 +331,7 @@ Kalendae.prototype = {
 		var out = [];
 		var i=0, c = this._sel.length;
 		for (;i<c;i++) {
-			out.push(moment(this._sel[i]));
+			out.push(moment.utc(this._sel[i]));
 		}
 		return out;
 	},
@@ -357,7 +357,7 @@ Kalendae.prototype = {
 	},
 
 	isSelected : function (input) {
-		input = moment(input).startOf('day').yearDay();
+		input = moment.utc(input).startOf('day').yearDay();
 		if (input < 1 || !this._sel || this._sel.length < 1) return false;
 
 		switch (this.settings.mode) {
@@ -405,14 +405,14 @@ Kalendae.prototype = {
 
 		if (draw !== false) {
 			if (new_dates[0]) {
-				this.viewStartDate = moment(new_dates[0], this.settings.format);
+				this.viewStartDate = moment.utc(new_dates[0], this.settings.format);
 			}
 			this.draw();
 		}
 	},
 
 	addSelected : function (date, draw) {
-		date = moment(date, this.settings.format).hours(12);
+		date = moment.utc(date, this.settings.format, true).hours(12);
 
 		if(this.settings.dayOutOfMonthClickable && this.settings.mode !== 'range'){ this.makeSelectedDateVisible(date); }
 
@@ -443,15 +443,15 @@ Kalendae.prototype = {
 
 	weekSelected: function (mom) {
 		var x = mom.toDate();
-		var start = moment(x).startOf('week');
-		var end = moment(x).endOf('week').subtract('day',1);
+		var start = moment.utc(x).startOf('week');
+		var end = moment.utc(x).endOf('week').subtract('day',1);
 		this._sel = [start, end];
 		this.publish('change', this, [mom.day()]);
 		this.draw();
 	},
 
 	makeSelectedDateVisible: function (date) {
-		outOfViewMonth = moment(date).date('1').diff(this.viewStartDate,'months');
+		outOfViewMonth = moment.utc(date).date('1').diff(this.viewStartDate,'months');
 
 		if(outOfViewMonth < 0){
 			this.viewStartDate.subtract('months',1);
@@ -462,7 +462,7 @@ Kalendae.prototype = {
 	},
 
 	removeSelected : function (date, draw) {
-		date = moment(date, this.settings.format).hours(12);
+		date = moment.utc(date, this.settings.format).hours(12);
 		var i = this._sel.length;
 		while (i--) {
 			if (this._sel[i].startOf('day').yearDay() === date.startOf('day').yearDay()) {
@@ -477,7 +477,7 @@ Kalendae.prototype = {
 
 	draw : function draw() {
 		// return;
-		var month = moment(this.viewStartDate).startOf('day').hours(12), //force middle of the day to avoid any weird date shifts
+		var month = moment.utc(this.viewStartDate).startOf('day').hours(12), //force middle of the day to avoid any weird date shifts
 			day,
 			classes = this.classes,
 			cal,
@@ -494,7 +494,7 @@ Kalendae.prototype = {
 		c = this.calendars.length;
 
 		do {
-			day = moment(month).date(1);
+			day = moment.utc(month).date(1);
 			day.day( day.day() < this.settings.weekStart ? this.settings.weekStart-7 : this.settings.weekStart);
 			//if the first day of the month is less than our week start, back up a week
 
@@ -539,7 +539,7 @@ Kalendae.prototype = {
 		} while (++i < c);
 
 		if (opts.directionScrolling) {
-			var diffComparison = moment().startOf('day').hours(12);
+			var diffComparison = moment.utc().startOf('day').hours(12);
 			diff = month.diff(diffComparison, 'months', true);
 
 			if (opts.direction === 'today-past' || opts.direction === 'past') {
@@ -596,7 +596,7 @@ var parseDates = function (input, delimiter, format) {
 
 	do {
 		if (input[i]) {
-			m = moment(input[i], format).hours(12);
+			m = moment.utc(input[i], format).hours(12);
 			if (m.isValid()) output.push(m);
 		}
 	} while (++i < c);
@@ -852,12 +852,14 @@ Kalendae.Input = function (targetElement, options) {
 	Kalendae.call(self, opts);
 
 	//create the close button
-	if (opts.closeButton) {
-		$closeButton = util.make('a', {'class':classes.closeButton}, self.container);
-		util.addEvent($closeButton, 'click', function () {
-			$input.blur();
-		});
-	}
+    if (opts.closeButton) {
+    $closeButton = util.make('a', {'class':classes.closeButton}, self.container);
+    util.addEvent($closeButton, 'click', function () {
+      if(util.isIE8())
+        self.hide();
+      $input.blur();
+    });
+  }
 
 	if (overwriteInput) $input.value = self.getSelected();
 
@@ -873,11 +875,14 @@ Kalendae.Input = function (targetElement, options) {
 
 	this._events.documentMousedown = util.addEvent(window.document, 'mousedown', function (event, target) {
 		noclose = false;
+        if(util.isIE8())
+          self.hide();
 	});
 
 	this._events.inputFocus = util.addEvent($input, 'focus', function () {
 		changing = true; // prevent setSelected from altering the input contents.
-		self.setSelected(this.value);
+        if(!util.isIE8())
+		    self.setSelected(this.value);
 		changing = false;
 		self.show();
 	});
