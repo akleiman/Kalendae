@@ -34,11 +34,11 @@ build/kalendae.standalone.js: $(kal) src/header.js
 
 build/kalendae.js: $(kmomentless) src/header.js
 	cat src/header.js > $@
-	echo "(function (undefined) {" >> $@
+	echo "(function (undefined, externalMoment) {" >> $@
 	echo "" >> $@
 	cat $(kmomentless) >> $@
 	echo "" >> $@
-	echo "})();" >> $@
+	echo "})(undefined, externalMoment);" >> $@
 
 build/kalendae.min.js: build/kalendae.js
 	cat src/header.js > $@

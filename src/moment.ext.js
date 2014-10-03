@@ -2,7 +2,9 @@
 if (!Kalendae.moment) {
 	if (window.moment) {
 		Kalendae.moment = window.moment;
-	} else {
+	} else if(externalMoment) {
+        Kalendae.moment = externalMoment;
+    } else {
 		throw "Kalendae requires moment.js. You must use kalendae.standalone.js if moment is not available on the page.";
 	}
 }
